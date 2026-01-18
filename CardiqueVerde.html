@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Negocios Verdes - Directorio Sostenible</title>
+  <style>
+    body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; background: #f5f9f5; color: #2e3c2e; }
+    header { background: linear-gradient(135deg, #1b5e20, #388e3c); color: white; text-align: center; padding: 2rem 1rem; box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
+    header h1 { margin: 0; font-size: 2.4rem; }
+    header p { margin: 8px 0 0; font-size: 1.1rem; opacity: 0.95; }
+    .search-box { max-width: 600px; margin: 1.5rem auto; padding: 0 1rem; }
+    #searchInput { width: 100%; padding: 14px 20px; font-size: 1.1rem; border: 2px solid #4caf50; border-radius: 50px; box-sizing: border-box; outline: none; transition: border 0.3s; }
+    #searchInput:focus { border-color: #2e7d32; }
+    .grid { max-width: 1200px; margin: 0 auto 3rem; padding: 0 1rem; display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; }
+    .card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 6px 15px rgba(0,0,0,0.08); transition: transform 0.25s, box-shadow 0.25s; cursor: pointer; }
+    .card:hover { transform: translateY(-8px); box-shadow: 0 12px 25px rgba(0,0,0,0.12); }
+    .card-header { background: #4caf50; color: white; padding: 1rem; font-weight: bold; font-size: 1.2rem; }
+    .card-body { padding: 1.2rem; }
+    .card-body p { margin: 0.6rem 0; font-size: 0.98rem; }
+    .card-body strong { color: #1b5e20; }
+    .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.65); justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(4px); }
+    .modal-content { background: white; width: 90%; max-width: 520px; border-radius: 16px; padding: 2rem; position: relative; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.3); }
+    .close { position: absolute; top: 15px; right: 20px; font-size: 2.2rem; color: #2e7d32; cursor: pointer; }
+    .no-results { text-align: center; padding: 3rem; color: #555; font-size: 1.2rem; }
+    @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Negocios Verdes</h1>
+    <p>Directorio de Empresas y Negocios Sostenibles</p>
+  </header>
+
+  <div class="search-box">
+    <input type="text" id="searchInput" placeholder="Buscar por nombre, categoría, ciudad..." autocomplete="off">
+  </div>
+
+  <div class="grid" id="cardsGrid"></div>
+
+  <div id="modal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal()">&times;</span>
+      <h2 id="modalNombre"></h2>
+      <div id="modalDetalles"></div>
+    </div>
+  </div>
+
+  <script>
+    // CAMBIA ESTA URL por la tuya pública (después de publicar en la web → output=csv)
+	// https://docs.google.com/spreadsheets/d/16oldyVOqlF5-tcyeYpSReq4nMdq1ZFZdNcOgFWgNmX8/edit?gid=1951547377#gid=1951547377
+	// CSv 
+	//https://docs.google.com/spreadsheets/d/e/2PACX-1vQlggPzZH15Bo_Ssnt6Dk80qoaw5PJWGG15KRWo9J9ejq95qanAqNxOVGtvYhSD2RGUX8YSM68YStuo/pub?gid=849896346&single=true&output=csv
+	
+    // const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQlggPzZH15Bo_Ssnt6Dk80qoaw5PJWGG15KRWo9J9ejq95qanAqNxOVGtvYhSD2RGUX8YSM68YStuo/pub?gid=849896346&single=true&output=csv';
+	// Etiqueta con cors 
+	const SHEET_CSV_URL = 'https://cors-anywhere.herokuapp.com/https://docs.google.com/spreadsheets/d/e/2PACX-1vQlggPzZH15Bo_Ssnt6Dk80qoaw5PJWGG15KRWo9J9ejq95qanAqNxOVGtvYhSD2RGUX8YSM68YStuo/pub?gid=849896346&single=true&output=csv';
+
+    let allData = [];
+
+    // Cargar datos desde CSV
+    fetch(SHEET_CSV_URL)
+      .then(response => response.text())
+      .then(csvText => {
+        const rows = csvText.split('\n').map(row => row.split(',').map(cell => cell.trim().replace(/^"|"$/g, '')));
+        const headers = rows[0];
+        allData = rows.slice(1).map(row => {
+          let obj = {};
+          headers.forEach((header, i) => { obj[header] = row[i] || ''; });
+          return obj;
+        }).filter(item => item[headers[0]]); // Filtra filas vacías
+        renderCards(allData);
+      })
+      .catch(err => {
+        document.getElementById('cardsGrid').innerHTML = '<p class="no-results">Error al cargar los datos. Verifica que la hoja esté publicada públicamente.</p>';
+        console.error(err);
+      });
+
+    // Renderizar tarjetas
+    function renderCards(data) {
+      const grid = document.getElementById('cardsGrid');
+      grid.innerHTML = data.length === 0 ? '<p class="no-results">No se encontraron resultados</p>' : '';
+      data.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <div class="card-header">${item.Nombre || item['Nombre Empresa'] || 'Sin nombre'}</div>
+          <div class="card-body">
+            <p><strong>Categoría:</strong> ${item.Categoría || item['Sector'] || '-'}</p>
+            <p><strong>Ciudad:</strong> ${item.Ciudad || item['Ubicación'] || '-'}</p>
+          </div>
+        `;
+        card.onclick = () => showModal(item);
+        grid.appendChild(card);
+      });
+    }
+
+    // Filtrado en tiempo real
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+      const term = e.target.value.toLowerCase().trim();
+      const filtered = allData.filter(item => {
+        return Object.values(item).some(val => 
+          String(val).toLowerCase().includes(term)
+        );
+      });
+      renderCards(filtered);
+    });
+
+    // Mostrar modal con detalles
+    function showModal(item) {
+      document.getElementById('modalNombre').textContent = item.Nombre || item['Nombre Empresa'] || 'Detalle';
+      let html = '';
+      for (let key in item) {
+        if (item[key] && key !== 'Timestamp') {  // Ignora columna de timestamp si existe
+          let value = item[key];
+          if (key.toLowerCase().includes('web') || key.toLowerCase().includes('sitio')) {
+            value = `<a href="${value}" target="_blank" style="color:#2e7d32;">${value}</a>`;
+          } else if (key.toLowerCase().includes('email')) {
+            value = `<a href="mailto:${value}" style="color:#2e7d32;">${value}</a>`;
+          } else if (key.toLowerCase().includes('tel') || key.toLowerCase().includes('cel')) {
+            value = `<a href="tel:${value}" style="color:#2e7d32;">${value}</a>`;
+          }
+          html += `<p><strong>${key}:</strong> ${value}</p>`;
+        }
+      }
+      document.getElementById('modalDetalles').innerHTML = html;
+      document.getElementById('modal').style.display = 'flex';
+    }
+
+    function closeModal() {
+      document.getElementById('modal').style.display = 'none';
+    }
+
+    // Cerrar modal al clickear fuera
+    document.getElementById('modal').addEventListener('click', (e) => {
+      if (e.target === document.getElementById('modal')) closeModal();
+    });
+  </script>
+</body>
+</html>
