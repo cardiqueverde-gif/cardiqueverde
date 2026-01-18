@@ -90,23 +90,40 @@
       });
 
     // Renderizar tarjetas
-    function renderCards(data) {
-      const grid = document.getElementById('cardsGrid');
-      grid.innerHTML = data.length === 0 ? '<p class="no-results">No se encontraron resultados</p>' : '';
-      data.forEach(item => {
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.innerHTML = `
-          <div class="card-header">${item.Nombre || item['Nombre Empresa'] || 'Sin nombre'}</div>
-          <div class="card-body">
-            <p><strong>Categoría:</strong> ${item.Categoría || item['Sector'] || '-'}</p>
-            <p><strong>Ciudad:</strong> ${item.Ciudad || item['Ubicación'] || '-'}</p>
-          </div>
-        `;
-        card.onclick = () => showModal(item);
-        grid.appendChild(card);
-      });
-    }
+ function renderCards(data) {
+  const grid = document.getElementById('cardsGrid');
+  grid.innerHTML = data.length === 0 ? '<p class="no-results">No se encontraron resultados</p>' : '';
+
+  data.forEach(item => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    
+    // Nombre principal (ajusta si tu columna se llama diferente)
+    const nombre = item['Nombre'] || item['Nombre del Negocio'] || item['Nombre Empresa'] || item['Nombre Negocio'] || 'Sin nombre';
+    
+    // Categoría: usa 'Zona' o inventa una si no hay (puedes cambiar a otra columna real)
+    const categoria = item['Zona'] || item['Sector'] || item['Tipo'] || item['Actividad'] || '-';
+    
+    // Ciudad: usa 'Municipio' que sí existe en tu CSV
+    const ciudad = item['Municipio'] || item['Ciudad'] || item['Ubicación'] || '-';
+    
+    // Descripción breve (primeras 80-100 caracteres si existe)
+    const descBreve = item['Dirección'] || item['Actividad'] || item['Descripcion'] || '';
+    const descCorta = descBreve.substring(0, 80) + (descBreve.length > 80 ? '...' : '');
+
+    card.innerHTML = `
+      <div class="card-header">${nombre}</div>
+      <div class="card-body">
+        <p><strong>Zona / Categoría:</strong> ${categoria}</p>
+        <p><strong>Municipio:</strong> ${ciudad}</p>
+        ${descCorta ? `<p style="margin-top:10px; font-size:0.95em; color:#555; line-height:1.4;">${descCorta}</p>` : ''}
+      </div>
+    `;
+    
+    card.onclick = () => showModal(item);
+    grid.appendChild(card);
+  });
+}
 
     // Filtrado en tiempo real
     document.getElementById('searchInput').addEventListener('input', (e) => {
@@ -193,6 +210,7 @@ function showModal(item) {
   </script>
 </body>
 </html>
+
 
 
 
