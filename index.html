@@ -50,6 +50,29 @@
     <input type="text" id="searchInput" placeholder="Buscar por nombre, categoría, ciudad..." autocomplete="off">
   </div>
 
+
+
+	<div class="filter-box" style="max-width: 800px; margin: 1.5rem auto; padding: 0 1rem; display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; align-items: center;">
+  <div>
+    <label for="groupCategory" style="font-weight: bold; color: #2e7d32;">Agrupar / Filtrar por:</label>
+    <select id="groupCategory" style="padding: 10px; border-radius: 8px; border: 2px solid #4caf50; margin-left: 10px;">
+      <option value="">Ninguno</option>
+      <option value="Zona">Zona</option>
+      <option value="Grupo">Grupo</option>
+      <option value="Municipio">Municipio</option>
+      <option value="Fase">Fase</option>
+      <option value="Estado">Estado</option>
+    </select>
+  </div>
+  <div id="valueFilterContainer" style="display: none;">
+    <label for="groupValue" style="font-weight: bold; color: #2e7d32;">Valor:</label>
+    <select id="groupValue" style="padding: 10px; border-radius: 8px; border: 2px solid #4caf50; margin-left: 10px;">
+      <option value="">Todos</option>
+    </select>
+  </div>
+</div>
+	
+
   <div class="grid" id="cardsGrid"></div>
 
   <div id="modal" class="modal">
@@ -211,6 +234,7 @@ function showModal(item) {
   </script>
 </body>
 </html>
+
 
 
 
