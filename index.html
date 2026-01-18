@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
@@ -7,12 +7,12 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
   <style>
     body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; background: #f5f9f5; color: #2e3c2e; }
-    header { background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80') center/cover no-repeat; padding: 5rem 1rem; color: white; text-align: center; position: relative; }
+    header { background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80') center/cover no-repeat; padding: 5rem 1rem; color: white; text-align: center; }
     header h1 { margin: 0; font-size: 3rem; text-shadow: 2px 2px 8px rgba(0,0,0,0.5); }
     header p { font-size: 1.3rem; margin: 0.5rem 0 1rem; }
     .search-box, .filter-box { max-width: 800px; margin: 1.5rem auto; padding: 0 1rem; display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; align-items: center; }
-    #searchInput, select { padding: 12px 20px; font-size: 1.1rem; border: 2px solid #4caf50; border-radius: 50px; outline: none; transition: border 0.3s; }
-    #searchInput:focus, select:focus { border-color: #2e7d32; }
+    input, select { padding: 12px 20px; font-size: 1.1rem; border: 2px solid #4caf50; border-radius: 50px; outline: none; transition: border 0.3s; }
+    input:focus, select:focus { border-color: #2e7d32; }
     .grid { max-width: 1200px; margin: 0 auto 3rem; padding: 0 1rem; display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; }
     .card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 6px 15px rgba(0,0,0,0.08); transition: transform 0.25s, box-shadow 0.25s; cursor: pointer; }
     .card:hover { transform: translateY(-8px); box-shadow: 0 12px 25px rgba(0,0,0,0.12); }
@@ -25,6 +25,7 @@
     .modal-content { background: white; width: 90%; max-width: 520px; border-radius: 16px; padding: 2rem; position: relative; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.3); }
     .close { position: absolute; top: 15px; right: 20px; font-size: 2.2rem; color: #2e7d32; cursor: pointer; }
     .no-results { text-align: center; padding: 3rem; color: #555; font-size: 1.2rem; }
+    .error-msg { color: #d32f2f; text-align: center; padding: 1rem; }
     @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } .search-box, .filter-box { flex-direction: column; } }
   </style>
 </head>
@@ -44,7 +45,7 @@
   <div class="filter-box">
     <div>
       <label for="groupCategory" style="font-weight: bold; color: #2e7d32;">Agrupar / Filtrar por:</label>
-      <select id="groupCategory">
+      <select id="groupCategory" disabled>
         <option value="">Ninguno</option>
         <option value="Zona">Zona</option>
         <option value="Grupo">Grupo</option>
@@ -60,6 +61,8 @@
       </select>
     </div>
   </div>
+
+  <div id="statusMsg" class="error-msg" style="display: none;"></div>
 
   <div class="grid" id="cardsGrid"></div>
 
@@ -79,6 +82,8 @@
     let currentGroupCategory = '';
     let currentGroupValue = '';
 
+    const statusMsg = document.getElementById('statusMsg');
+
     // Cargar datos
     Papa.parse(PROXY_URL + SHEET_CSV_URL, {
       download: true,
@@ -86,13 +91,16 @@
       skipEmptyLines: true,
       complete: function(results) {
         allData = results.data.filter(row => Object.values(row).some(val => val && val.trim() !== ''));
-        console.log('Datos cargados:', allData.length, 'filas');
+        console.log('Datos cargados correctamente. Filas:', allData.length);
+        console.log('Primera fila para depuración:', allData[0] || 'Sin datos');
         renderCards(allData);
         document.getElementById('groupCategory').disabled = false;
+        statusMsg.style.display = 'none';
       },
       error: function(error) {
-        console.error('Error CSV:', error);
-        document.getElementById('cardsGrid').innerHTML = '<p class="no-results">Error al cargar datos. Activa proxy CORS o revisa consola (F12).</p>';
+        console.error('Error al cargar CSV:', error);
+        statusMsg.textContent = 'Error al cargar los datos. Asegúrate de haber activado el proxy CORS temporal en https://cors-anywhere.herokuapp.com/corsdemo y refresca.';
+        statusMsg.style.display = 'block';
       }
     });
 
@@ -100,12 +108,9 @@
     function getUniqueValues(data, key) {
       if (!key) return [];
       const lowerKey = key.trim().toLowerCase();
-      const values = data
-        .map(item => {
-          const actualKey = Object.keys(item).find(k => k.trim().toLowerCase() === lowerKey);
-          return actualKey ? item[actualKey] : null;
-        })
-        .filter(v => v && v.trim() !== '');
+      const actualKey = Object.keys(data[0] || {}).find(k => k.trim().toLowerCase() === lowerKey);
+      if (!actualKey) return [];
+      const values = data.map(item => item[actualKey]).filter(v => v && v.trim() !== '');
       return [...new Set(values)].sort();
     }
 
@@ -119,10 +124,10 @@
       
       if (currentGroupCategory && allData.length > 0) {
         const uniqueValues = getUniqueValues(allData, currentGroupCategory);
-        console.log(`Valores para ${currentGroupCategory}:`, uniqueValues);
+        console.log(`Valores encontrados para "${currentGroupCategory}":`, uniqueValues);
         
         if (uniqueValues.length === 0) {
-          valueSelect.innerHTML += '<option disabled>Sin valores disponibles</option>';
+          valueSelect.innerHTML += '<option disabled>No hay valores disponibles para esta categoría</option>';
         } else {
           uniqueValues.forEach(val => {
             const option = document.createElement('option');
@@ -177,11 +182,11 @@
       }
     }
 
-    // Crear tarjeta individual
+    // Crear tarjeta
     function createCard(item) {
       const card = document.createElement('div');
       card.className = 'card';
-      const nombre = item['Nombre'] || item['Nombre del Negocio'] || 'Sin nombre';
+      const nombre = item['Nombre'] || item['Nombre del Negocio'] || item['Nombre Empresa'] || 'Sin nombre';
       const zona = item['Zona'] || '-';
       const municipio = item['Municipio'] || '-';
       const descBreve = (item['Dirección'] || item['Actividad'] || '').substring(0, 80) + (item['Dirección'] || item['Actividad'] ? '...' : '');
@@ -198,24 +203,30 @@
       return card;
     }
 
-    // Modal (ya lo tienes, pero si quieres mejorarlo, dime)
+    // Modal con links
     function showModal(item) {
-      document.getElementById('modalNombre').textContent = item['Nombre'] || item['Nombre del Negocio'] || 'Detalle';
+      document.getElementById('modalNombre').textContent = item['Nombre'] || item['Nombre del Negocio'] || 'Detalle del Negocio';
       let html = '';
       for (let key in item) {
         if (item[key]) {
           let value = item[key];
-          if (key.toLowerCase().includes('web') || key.toLowerCase().includes('url')) {
-            value = `<a href="${value}" target="_blank" style="color:#2e7d32;">${value}</a>`;
+          if (key.toLowerCase().includes('web') || key.toLowerCase().includes('url') || key.toLowerCase().includes('face') || key.toLowerCase().includes('insta') || key.toLowerCase().includes('tik')) {
+            value = `<a href="${value.startsWith('http') ? value : 'https://' + value}" target="_blank" style="color:#2e7d32;">${value}</a>`;
           } else if (key.toLowerCase().includes('email')) {
             value = `<a href="mailto:${value}" style="color:#2e7d32;">${value}</a>`;
           } else if (key.toLowerCase().includes('whats') || key.toLowerCase().includes('tel')) {
             value = `<a href="https://wa.me/${value.replace(/\D/g,'')}" target="_blank" style="color:#25D366;">${value}</a>`;
+          } else if (key.toLowerCase().includes('gps') || key.toLowerCase().includes('pos')) {
+            const coords = value.match(/POINT \(([^ ]+) ([^ ]+)\)/);
+            if (coords) {
+              const lat = coords[2], lng = coords[1];
+              value = `<a href="https://www.google.com/maps/search/?api=1&query=${lat},${lng}" target="_blank" style="color:#4285F4;">Ver en Maps (${lat}, ${lng})</a>`;
+            }
           }
           html += `<p><strong>${key}:</strong> ${value}</p>`;
         }
       }
-      document.getElementById('modalDetalles').innerHTML = html;
+      document.getElementById('modalDetalles').innerHTML = html || '<p>No hay detalles adicionales.</p>';
       document.getElementById('modal').style.display = 'flex';
     }
 
@@ -227,7 +238,7 @@
       if (e.target === document.getElementById('modal')) closeModal();
     });
 
-    // Buscador de texto (ya lo tienes, pero asegúrate de que esté)
+    // Buscador de texto
     document.getElementById('searchInput').addEventListener('input', (e) => {
       const term = e.target.value.toLowerCase().trim();
       const filtered = allData.filter(item => Object.values(item).some(val => String(val).toLowerCase().includes(term)));
