@@ -231,9 +231,100 @@ function showModal(item) {
     document.getElementById('modal').addEventListener('click', (e) => {
       if (e.target === document.getElementById('modal')) closeModal();
     });
+
+
+let currentGroupCategory = '';
+let currentGroupValue = '';
+
+// Función para obtener valores únicos de una columna
+function getUniqueValues(data, key) {
+  const values = [...new Set(data.map(item => item[key]).filter(v => v))];
+  return values.sort();
+}
+
+// Actualizar segundo combo cuando cambie la categoría
+document.getElementById('groupCategory').addEventListener('change', function() {
+  currentGroupCategory = this.value;
+  const valueSelect = document.getElementById('groupValue');
+  const container = document.getElementById('valueFilterContainer');
+  
+  valueSelect.innerHTML = '<option value="">Todos</option>';
+  
+  if (currentGroupCategory) {
+    const uniqueValues = getUniqueValues(allData, currentGroupCategory);
+    uniqueValues.forEach(val => {
+      const option = document.createElement('option');
+      option.value = val;
+      option.textContent = val;
+      valueSelect.appendChild(option);
+    });
+    container.style.display = 'block';
+  } else {
+    container.style.display = 'none';
+    currentGroupValue = '';
+  }
+  
+  renderCards(allData); // Recargar vista
+});
+
+// Aplicar filtro cuando cambie el valor
+document.getElementById('groupValue').addEventListener('change', function() {
+  currentGroupValue = this.value;
+  renderCards(allData);
+});
+
+// Nueva función renderCards con agrupamiento visual
+function renderCards(data) {
+  let filteredData = data;
+  
+  // Aplicar filtro por valor seleccionado
+  if (currentGroupCategory && currentGroupValue) {
+    filteredData = data.filter(item => item[currentGroupCategory] === currentGroupValue);
+  }
+  
+  const grid = document.getElementById('cardsGrid');
+  grid.innerHTML = filteredData.length === 0 ? '<p class="no-results">No se encontraron resultados</p>' : '';
+  
+  if (currentGroupCategory && currentGroupValue) {
+    // Modo agrupado: una sección con título
+    const sectionTitle = document.createElement('h2');
+    sectionTitle.textContent = `${currentGroupCategory}: ${currentGroupValue}`;
+    sectionTitle.style.textAlign = 'center';
+    sectionTitle.style.color = '#2e7d32';
+    sectionTitle.style.margin = '2rem 0 1rem';
+    grid.appendChild(sectionTitle);
+  }
+  
+  // Renderizar tarjetas
+  filteredData.forEach(item => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    
+    const nombre = item['Nombre'] || item['Nombre del Negocio'] || item['Nombre Empresa'] || 'Sin nombre';
+    const zona = item['Zona'] || '-';
+    const municipio = item['Municipio'] || '-';
+    const descBreve = (item['Dirección'] || item['Actividad'] || '').substring(0, 100) + '...';
+    
+    card.innerHTML = `
+      <div class="card-header">${nombre}</div>
+      <div class="card-body">
+        <p><strong>Zona:</strong> ${zona}</p>
+        <p><strong>Municipio:</strong> ${municipio}</p>
+        ${descBreve ? `<p style="margin-top:10px; font-size:0.95em; color:#555;">${descBreve}</p>` : ''}
+      </div>
+    `;
+    
+    card.onclick = () => showModal(item);
+    grid.appendChild(card);
+  });
+}
+	  
+
+	  
   </script>
 </body>
 </html>
+
 
 
 
