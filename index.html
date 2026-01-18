@@ -4,14 +4,15 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Negocios Verdes - Directorio Sostenible</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
   <style>
     body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; background: #f5f9f5; color: #2e3c2e; }
-    header { background: linear-gradient(135deg, #1b5e20, #388e3c); color: white; text-align: center; padding: 2rem 1rem; box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
-    header h1 { margin: 0; font-size: 2.4rem; }
-    header p { margin: 8px 0 0; font-size: 1.1rem; opacity: 0.95; }
-    .search-box { max-width: 600px; margin: 1.5rem auto; padding: 0 1rem; }
-    #searchInput { width: 100%; padding: 14px 20px; font-size: 1.1rem; border: 2px solid #4caf50; border-radius: 50px; box-sizing: border-box; outline: none; transition: border 0.3s; }
-    #searchInput:focus { border-color: #2e7d32; }
+    header { background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80') center/cover no-repeat; padding: 5rem 1rem; color: white; text-align: center; position: relative; }
+    header h1 { margin: 0; font-size: 3rem; text-shadow: 2px 2px 8px rgba(0,0,0,0.5); }
+    header p { font-size: 1.3rem; margin: 0.5rem 0 1rem; }
+    .search-box, .filter-box { max-width: 800px; margin: 1.5rem auto; padding: 0 1rem; display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; align-items: center; }
+    #searchInput, select { padding: 12px 20px; font-size: 1.1rem; border: 2px solid #4caf50; border-radius: 50px; outline: none; transition: border 0.3s; }
+    #searchInput:focus, select:focus { border-color: #2e7d32; }
     .grid { max-width: 1200px; margin: 0 auto 3rem; padding: 0 1rem; display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; }
     .card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 6px 15px rgba(0,0,0,0.08); transition: transform 0.25s, box-shadow 0.25s; cursor: pointer; }
     .card:hover { transform: translateY(-8px); box-shadow: 0 12px 25px rgba(0,0,0,0.12); }
@@ -19,59 +20,46 @@
     .card-body { padding: 1.2rem; }
     .card-body p { margin: 0.6rem 0; font-size: 0.98rem; }
     .card-body strong { color: #1b5e20; }
+    .section-title { color: #2e7d32; text-align: center; font-size: 1.8rem; margin: 2rem 0 1rem; }
     .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.65); justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(4px); }
     .modal-content { background: white; width: 90%; max-width: 520px; border-radius: 16px; padding: 2rem; position: relative; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.3); }
     .close { position: absolute; top: 15px; right: 20px; font-size: 2.2rem; color: #2e7d32; cursor: pointer; }
     .no-results { text-align: center; padding: 3rem; color: #555; font-size: 1.2rem; }
-    @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }
+    @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } .search-box, .filter-box { flex-direction: column; } }
   </style>
 </head>
 <body>
 
- 
-
-	<header style="background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80') center/cover no-repeat; padding: 4rem 1rem; color: white; text-align: center; position: relative;">
-  <div style="max-width: 1200px; margin: 0 auto;">
-    <!-- Logo (sube tu logo a GitHub o usa URL pública) -->
-    
-  <img src="https://raw.githubusercontent.com/cardiqueverde-gif/cardiqueverde/main/MiniLogoDirVerde.png" alt="Logo Negocios Verdes" style="max-height: 80px; margin-bottom: 1rem; border-radius: 8px;">
-	  
-    <h1 style="margin: 0; font-size: 3rem; text-shadow: 2px 2px 8px rgba(0,0,0,0.5);">Negocios Verdes</h1>
-    <p style="font-size: 1.3rem; margin: 0.5rem 0 1rem;">Directorio de Empresas y Negocios Sostenibles en Cartagena y Zona Sur</p>
-    
-    <p style="font-size: 1.1rem; max-width: 800px; margin: 1rem auto; opacity: 0.95;">
-      Descubre negocios comprometidos con el medio ambiente, turismo ecológico, reciclaje y prácticas sostenibles. ¡Apoya la economía verde!
-    </p>
-  </div>
-</header>
-	
+  <header>
+    <img src="https://via.placeholder.com/200x80/2e7d32/FFFFFF?text=Logo+Negocios+Verdes" alt="Logo Negocios Verdes" style="max-height: 80px; margin-bottom: 1rem; border-radius: 8px;">
+    <h1>Negocios Verdes</h1>
+    <p>Directorio de Empresas y Negocios Sostenibles en Cartagena y Zona Sur</p>
+    <p>Descubre negocios comprometidos con el medio ambiente, turismo ecológico, reciclaje y prácticas sostenibles. ¡Apoya la economía verde!</p>
+  </header>
 
   <div class="search-box">
     <input type="text" id="searchInput" placeholder="Buscar por nombre, categoría, ciudad..." autocomplete="off">
   </div>
 
-
-
-	<div class="filter-box" style="max-width: 800px; margin: 1.5rem auto; padding: 0 1rem; display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; align-items: center;">
-  <div>
-    <label for="groupCategory" style="font-weight: bold; color: #2e7d32;">Agrupar / Filtrar por:</label>
-    <select id="groupCategory" style="padding: 10px; border-radius: 8px; border: 2px solid #4caf50; margin-left: 10px;">
-      <option value="">Ninguno</option>
-      <option value="Zona">Zona</option>
-      <option value="Grupo">Grupo</option>
-      <option value="Municipio">Municipio</option>
-      <option value="Fase">Fase</option>
-      <option value="Estado">Estado</option>
-    </select>
+  <div class="filter-box">
+    <div>
+      <label for="groupCategory" style="font-weight: bold; color: #2e7d32;">Agrupar / Filtrar por:</label>
+      <select id="groupCategory">
+        <option value="">Ninguno</option>
+        <option value="Zona">Zona</option>
+        <option value="Grupo">Grupo</option>
+        <option value="Municipio">Municipio</option>
+        <option value="Fase">Fase</option>
+        <option value="Estado">Estado</option>
+      </select>
+    </div>
+    <div id="valueFilterContainer" style="display: none;">
+      <label for="groupValue" style="font-weight: bold; color: #2e7d32;">Valor:</label>
+      <select id="groupValue">
+        <option value="">Todos</option>
+      </select>
+    </div>
   </div>
-  <div id="valueFilterContainer" style="display: none;">
-    <label for="groupValue" style="font-weight: bold; color: #2e7d32;">Valor:</label>
-    <select id="groupValue" style="padding: 10px; border-radius: 8px; border: 2px solid #4caf50; margin-left: 10px;">
-      <option value="">Todos</option>
-    </select>
-  </div>
-</div>
-	
 
   <div class="grid" id="cardsGrid"></div>
 
@@ -84,346 +72,167 @@
   </div>
 
   <script>
-    // CAMBIA ESTA URL por la tuya pública (después de publicar en la web → output=csv)
-	// https://docs.google.com/spreadsheets/d/16oldyVOqlF5-tcyeYpSReq4nMdq1ZFZdNcOgFWgNmX8/edit?gid=1951547377#gid=1951547377
-	// CSv 
-	//https://docs.google.com/spreadsheets/d/e/2PACX-1vQlggPzZH15Bo_Ssnt6Dk80qoaw5PJWGG15KRWo9J9ejq95qanAqNxOVGtvYhSD2RGUX8YSM68YStuo/pub?gid=849896346&single=true&output=csv
-	
-    // const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQlggPzZH15Bo_Ssnt6Dk80qoaw5PJWGG15KRWo9J9ejq95qanAqNxOVGtvYhSD2RGUX8YSM68YStuo/pub?gid=849896346&single=true&output=csv';
-	// Etiqueta con cors 
-	const SHEET_CSV_URL = 'https://cors-anywhere.herokuapp.com/https://docs.google.com/spreadsheets/d/e/2PACX-1vQlggPzZH15Bo_Ssnt6Dk80qoaw5PJWGG15KRWo9J9ejq95qanAqNxOVGtvYhSD2RGUX8YSM68YStuo/pub?gid=849896346&single=true&output=csv';
+    const PROXY_URL = 'https://cors-anywhere.herokuapp.com/';
+    const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQlggPzZH15Bo_Ssnt6Dk80qoaw5PJWGG15KRWo9J9ejq95qanAqNxOVGtvYhSD2RGUX8YSM68YStuo/pub?gid=849896346&single=true&output=csv';
 
     let allData = [];
+    let currentGroupCategory = '';
+    let currentGroupValue = '';
 
-    // Cargar datos desde CSV
-    fetch(SHEET_CSV_URL)
-      .then(response => response.text())
-      .then(csvText => {
-        const rows = csvText.split('\n').map(row => row.split(',').map(cell => cell.trim().replace(/^"|"$/g, '')));
-        const headers = rows[0];
-        allData = rows.slice(1).map(row => {
-          let obj = {};
-          headers.forEach((header, i) => { obj[header] = row[i] || ''; });
-          return obj;
-        }).filter(item => item[headers[0]]); // Filtra filas vacías
+    // Cargar datos
+    Papa.parse(PROXY_URL + SHEET_CSV_URL, {
+      download: true,
+      header: true,
+      skipEmptyLines: true,
+      complete: function(results) {
+        allData = results.data.filter(row => Object.values(row).some(val => val && val.trim() !== ''));
+        console.log('Datos cargados:', allData.length, 'filas');
         renderCards(allData);
-      })
-      .catch(err => {
-        document.getElementById('cardsGrid').innerHTML = '<p class="no-results">Error al cargar los datos. Verifica que la hoja esté publicada públicamente.</p>';
-        console.error(err);
-      });
-
-    // Renderizar tarjetas
- function renderCards(data) {
-  const grid = document.getElementById('cardsGrid');
-  grid.innerHTML = data.length === 0 ? '<p class="no-results">No se encontraron resultados</p>' : '';
-
-  data.forEach(item => {
-    const card = document.createElement('div');
-    card.className = 'card';
-    
-    // Nombre principal (ajusta si tu columna se llama diferente)
-    const nombre = item['Nombre'] || item['Nombre del Negocio'] || item['Nombre Empresa'] || item['Nombre Negocio'] || 'Sin nombre';
-    
-    // Categoría: usa 'Zona' o inventa una si no hay (puedes cambiar a otra columna real)
-    const categoria = item['Zona'] || item['Sector'] || item['Tipo'] || item['Actividad'] || '-';
-    
-    // Ciudad: usa 'Municipio' que sí existe en tu CSV
-    const ciudad = item['Municipio'] || item['Ciudad'] || item['Ubicación'] || '-';
-    
-    // Descripción breve (primeras 80-100 caracteres si existe)
-    const descBreve = item['Dirección'] || item['Actividad'] || item['Descripcion'] || '';
-    const descCorta = descBreve.substring(0, 80) + (descBreve.length > 80 ? '...' : '');
-
-    card.innerHTML = `
-      <div class="card-header">${nombre}</div>
-      <div class="card-body">
-        <p><strong>Zona / Categoría:</strong> ${categoria}</p>
-        <p><strong>Municipio:</strong> ${ciudad}</p>
-        ${descCorta ? `<p style="margin-top:10px; font-size:0.95em; color:#555; line-height:1.4;">${descCorta}</p>` : ''}
-      </div>
-    `;
-    
-    card.onclick = () => showModal(item);
-    grid.appendChild(card);
-  });
-}
-
-    // Filtrado en tiempo real
-    document.getElementById('searchInput').addEventListener('input', (e) => {
-      const term = e.target.value.toLowerCase().trim();
-      const filtered = allData.filter(item => {
-        return Object.values(item).some(val => 
-          String(val).toLowerCase().includes(term)
-        );
-      });
-      renderCards(filtered);
+        document.getElementById('groupCategory').disabled = false;
+      },
+      error: function(error) {
+        console.error('Error CSV:', error);
+        document.getElementById('cardsGrid').innerHTML = '<p class="no-results">Error al cargar datos. Activa proxy CORS o revisa consola (F12).</p>';
+      }
     });
 
-    // Mostrar modal con detalles
-  // Modal con formato bonito y links clicables
-function showModal(item) {
-  document.getElementById('modalNombre').textContent = item['Nombre'] || item['Nombre del Negocio'] || item['Nombre Empresa'] || 'Detalle del Negocio';
-
-  let html = '';
-
-  // Campos principales con formato especial
-  if (item['Zona']) html += `<p><strong>Zona:</strong> ${item['Zona']}</p>`;
-  if (item['Municipio']) html += `<p><strong>Municipio:</strong> ${item['Municipio']}</p>`;
-  if (item['Dirección'] || item['Direccion']) html += `<p><strong>Dirección:</strong> ${item['Dirección'] || item['Direccion']}</p>`;
-
-  // WhatsApp con enlace directo
-  if (item['Whatsup'] || item['Whatsapp']) {
-    const whatsapp = item['Whatsup'] || item['Whatsapp'];
-    html += `<p><strong>WhatsApp:</strong> <a href="https://wa.me/${whatsapp.replace(/\D/g,'')}" target="_blank" style="color:#25D366; font-weight:bold;">${whatsapp}</a></p>`;
-  }
-
-  // GPS → enlace a Google Maps
-  if (item['Gps'] || item['Pos'] || item['Latitud'] || item['Longitud']) {
-    let lat = item['Pos'] || item['Latitud'] || (item['Gps'] && item['Gps'].match(/POINT \(([^ ]+) ([^ ]+)\)/)?.[2]);
-    let lng = item['Pos'] || item['Longitud'] || (item['Gps'] && item['Gps'].match(/POINT \(([^ ]+) ([^ ]+)\)/)?.[1]);
-    if (lat && lng) {
-      html += `<p><strong>Ubicación en Google Maps:</strong> <a href="https://www.google.com/maps/search/?api=1&query=${lat},${lng}" target="_blank" style="color:#4285F4; font-weight:bold;">Ver en Maps</a> (${lat}, ${lng})</p>`;
+    // Valores únicos (case-insensitive)
+    function getUniqueValues(data, key) {
+      if (!key) return [];
+      const lowerKey = key.trim().toLowerCase();
+      const values = data
+        .map(item => {
+          const actualKey = Object.keys(item).find(k => k.trim().toLowerCase() === lowerKey);
+          return actualKey ? item[actualKey] : null;
+        })
+        .filter(v => v && v.trim() !== '');
+      return [...new Set(values)].sort();
     }
-  }
 
-  // Redes sociales y enlaces
-  if (item['FaceBook'] || item['Facebook']) {
-    html += `<p><strong>Facebook:</strong> <a href="${item['FaceBook'] || item['Facebook']}" target="_blank" style="color:#1877F2;">Abrir Facebook</a></p>`;
-  }
-  if (item['Instagram']) {
-    html += `<p><strong>Instagram:</strong> <a href="${item['Instagram']}" target="_blank" style="color:#E1306C;">Abrir Instagram</a></p>`;
-  }
-  if (item['TikTok']) {
-    html += `<p><strong>TikTok:</strong> <a href="${item['TikTok']}" target="_blank" style="color:#FF0050;">Abrir TikTok</a></p>`;
-  }
-  if (item['Correo'] || item['CorreoElectronico']) {
-    html += `<p><strong>Correo:</strong> <a href="mailto:${item['Correo'] || item['CorreoElectronico']}" style="color:#4285F4;">${item['Correo'] || item['CorreoElectronico']}</a></p>`;
-  }
-  if (item['UrlNegocio'] || item['SitioWeb'] || item['Url']) {
-    const url = item['UrlNegocio'] || item['SitioWeb'] || item['Url'];
-    html += `<p><strong>Sitio Web:</strong> <a href="${url.startsWith('http') ? url : 'https://' + url}" target="_blank" style="color:#2e7d32;">Abrir sitio</a></p>`;
-  }
+    // Cambio de categoría
+    document.getElementById('groupCategory').addEventListener('change', function() {
+      currentGroupCategory = this.value.trim();
+      const valueSelect = document.getElementById('groupValue');
+      const container = document.getElementById('valueFilterContainer');
+      
+      valueSelect.innerHTML = '<option value="">Todos</option>';
+      
+      if (currentGroupCategory && allData.length > 0) {
+        const uniqueValues = getUniqueValues(allData, currentGroupCategory);
+        console.log(`Valores para ${currentGroupCategory}:`, uniqueValues);
+        
+        if (uniqueValues.length === 0) {
+          valueSelect.innerHTML += '<option disabled>Sin valores disponibles</option>';
+        } else {
+          uniqueValues.forEach(val => {
+            const option = document.createElement('option');
+            option.value = val;
+            option.textContent = val;
+            valueSelect.appendChild(option);
+          });
+        }
+        container.style.display = 'inline-block';
+      } else {
+        container.style.display = 'none';
+        currentGroupValue = '';
+      }
+      renderCards(allData);
+    });
 
-  // Logo si existe
-  if (item['Logo']) {
-    html += `<p><strong>Logo:</strong><br><img src="${item['Logo']}" alt="Logo del negocio" style="max-width:200px; margin-top:10px; border-radius:8px;"></p>`;
-  }
+    // Cambio de valor
+    document.getElementById('groupValue').addEventListener('change', function() {
+      currentGroupValue = this.value;
+      renderCards(allData);
+    });
 
-  // Todos los demás campos restantes (opcional, para no perder nada)
-  html += '<hr><h4>Otros datos:</h4>';
-  for (let key in item) {
-    if (item[key] && key.trim() !== '' && 
-        !['Nombre', 'Nombre del Negocio', 'Nombre Empresa', 'Zona', 'Municipio', 'Dirección', 'Direccion', 'Whatsup', 'Whatsapp', 'Gps', 'Pos', 'Latitud', 'Longitud', 'FaceBook', 'Facebook', 'Instagram', 'TikTok', 'Correo', 'UrlNegocio', 'SitioWeb', 'Url', 'Logo'].includes(key)) {
-      html += `<p><strong>${key}:</strong> ${item[key]}</p>`;
+    // Render tarjetas con agrupamiento
+    function renderCards(data) {
+      let filteredData = data;
+      
+      if (currentGroupCategory && currentGroupValue) {
+        const lowerCategory = currentGroupCategory.toLowerCase();
+        filteredData = data.filter(item => {
+          const actualKey = Object.keys(item).find(k => k.trim().toLowerCase() === lowerCategory);
+          return actualKey && item[actualKey] === currentGroupValue;
+        });
+      }
+
+      const grid = document.getElementById('cardsGrid');
+      grid.innerHTML = filteredData.length === 0 ? '<p class="no-results">No se encontraron resultados</p>' : '';
+
+      if (currentGroupCategory && currentGroupValue) {
+        const section = document.createElement('div');
+        const title = document.createElement('h2');
+        title.className = 'section-title';
+        title.textContent = `${currentGroupCategory}: ${currentGroupValue} (${filteredData.length} negocios)`;
+        section.appendChild(title);
+
+        const cardsContainer = document.createElement('div');
+        cardsContainer.className = 'grid';
+        filteredData.forEach(item => cardsContainer.appendChild(createCard(item)));
+        section.appendChild(cardsContainer);
+        grid.appendChild(section);
+      } else {
+        filteredData.forEach(item => grid.appendChild(createCard(item)));
+      }
     }
-  }
 
-  document.getElementById('modalDetalles').innerHTML = html || '<p>No hay detalles adicionales.</p>';
-  document.getElementById('modal').style.display = 'flex';
-}
+    // Crear tarjeta individual
+    function createCard(item) {
+      const card = document.createElement('div');
+      card.className = 'card';
+      const nombre = item['Nombre'] || item['Nombre del Negocio'] || 'Sin nombre';
+      const zona = item['Zona'] || '-';
+      const municipio = item['Municipio'] || '-';
+      const descBreve = (item['Dirección'] || item['Actividad'] || '').substring(0, 80) + (item['Dirección'] || item['Actividad'] ? '...' : '');
+
+      card.innerHTML = `
+        <div class="card-header">${nombre}</div>
+        <div class="card-body">
+          <p><strong>Zona:</strong> ${zona}</p>
+          <p><strong>Municipio:</strong> ${municipio}</p>
+          ${descBreve ? `<p style="margin-top:10px; font-size:0.95em; color:#555;">${descBreve}</p>` : ''}
+        </div>
+      `;
+      card.onclick = () => showModal(item);
+      return card;
+    }
+
+    // Modal (ya lo tienes, pero si quieres mejorarlo, dime)
+    function showModal(item) {
+      document.getElementById('modalNombre').textContent = item['Nombre'] || item['Nombre del Negocio'] || 'Detalle';
+      let html = '';
+      for (let key in item) {
+        if (item[key]) {
+          let value = item[key];
+          if (key.toLowerCase().includes('web') || key.toLowerCase().includes('url')) {
+            value = `<a href="${value}" target="_blank" style="color:#2e7d32;">${value}</a>`;
+          } else if (key.toLowerCase().includes('email')) {
+            value = `<a href="mailto:${value}" style="color:#2e7d32;">${value}</a>`;
+          } else if (key.toLowerCase().includes('whats') || key.toLowerCase().includes('tel')) {
+            value = `<a href="https://wa.me/${value.replace(/\D/g,'')}" target="_blank" style="color:#25D366;">${value}</a>`;
+          }
+          html += `<p><strong>${key}:</strong> ${value}</p>`;
+        }
+      }
+      document.getElementById('modalDetalles').innerHTML = html;
+      document.getElementById('modal').style.display = 'flex';
+    }
 
     function closeModal() {
       document.getElementById('modal').style.display = 'none';
     }
 
-    // Cerrar modal al clickear fuera
     document.getElementById('modal').addEventListener('click', (e) => {
       if (e.target === document.getElementById('modal')) closeModal();
     });
 
-
- let allData = [];
-let currentGroupCategory = '';
-let currentGroupValue = '';
-
-// Esperar a que los datos carguen (ya lo tienes en Papa.parse complete)
-Papa.parse(PROXY_URL + SHEET_CSV_URL, {
-  download: true,
-  header: true,
-  skipEmptyLines: true,
-  complete: function(results) {
-    allData = results.data.filter(row => Object.values(row).some(val => val !== '' && val !== null));
-    console.log('Datos cargados:', allData.length, 'filas'); // Para depurar en consola
-    renderCards(allData);
-    // Habilitar combos una vez cargados
-    document.getElementById('groupCategory').disabled = false;
-  },
-  error: function(error) {
-    console.error('Error al cargar CSV:', error);
-    document.getElementById('cardsGrid').innerHTML = '<p class="no-results">Error al cargar datos. Revisa consola (F12) o activa proxy CORS.</p>';
-  }
-});
-
-// Obtener valores únicos (ignora case y valores vacíos)
-function getUniqueValues(data, key) {
-  if (!key) return [];
-  const lowerKey = key.trim().toLowerCase();
-  const values = data
-    .map(item => {
-      // Busca columna ignorando mayúsculas/minúsculas
-      const actualKey = Object.keys(item).find(k => k.trim().toLowerCase() === lowerKey);
-      return actualKey ? item[actualKey] : null;
-    })
-    .filter(v => v && v.trim() !== '');
-  return [...new Set(values)].sort();
-}
-
-// Cambio de categoría principal
-document.getElementById('groupCategory').addEventListener('change', function() {
-  currentGroupCategory = this.value.trim();
-  const valueSelect = document.getElementById('groupValue');
-  const container = document.getElementById('valueFilterContainer');
-  
-  valueSelect.innerHTML = '<option value="">Todos</option>';
-  
-  if (currentGroupCategory && allData.length > 0) {
-    const uniqueValues = getUniqueValues(allData, currentGroupCategory);
-    console.log(`Valores únicos para ${currentGroupCategory}:`, uniqueValues); // Depuración
-    
-    if (uniqueValues.length === 0) {
-      valueSelect.innerHTML += '<option disabled>Sin valores disponibles</option>';
-    } else {
-      uniqueValues.forEach(val => {
-        const option = document.createElement('option');
-        option.value = val;
-        option.textContent = val;
-        valueSelect.appendChild(option);
-      });
-    }
-    container.style.display = 'inline-block';
-  } else {
-    container.style.display = 'none';
-    currentGroupValue = '';
-  }
-  
-  renderCards(allData);
-});
-
-// Cambio de valor específico
-document.getElementById('groupValue').addEventListener('change', function() {
-  currentGroupValue = this.value;
-  renderCards(allData);
-});
-
-// renderCards ajustada (agrupamiento visual solo si hay valor seleccionado)
-function renderCards(data) {
-  let filteredData = data;
-  
-  // Filtro por valor
-  if (currentGroupCategory && currentGroupValue) {
-    const lowerCategory = currentGroupCategory.toLowerCase();
-    filteredData = data.filter(item => {
-      const actualKey = Object.keys(item).find(k => k.trim().toLowerCase() === lowerCategory);
-      return actualKey && item[actualKey] === currentGroupValue;
+    // Buscador de texto (ya lo tienes, pero asegúrate de que esté)
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+      const term = e.target.value.toLowerCase().trim();
+      const filtered = allData.filter(item => Object.values(item).some(val => String(val).toLowerCase().includes(term)));
+      renderCards(filtered);
     });
-  }
-  
-  const grid = document.getElementById('cardsGrid');
-  grid.innerHTML = filteredData.length === 0 ? '<p class="no-results">No se encontraron resultados</p>' : '';
-  
-  // Agrupamiento visual (solo si hay valor específico)
-  if (currentGroupCategory && currentGroupValue) {
-    const section = document.createElement('div');
-    section.style.margin = '2rem 0';
-    const title = document.createElement('h2');
-    title.textContent = `${currentGroupCategory}: ${currentGroupValue} (${filteredData.length} negocios)`;
-    title.style.color = '#2e7d32';
-    title.style.textAlign = 'center';
-    section.appendChild(title);
-    
-    const cardsContainer = document.createElement('div');
-    cardsContainer.style.display = 'grid';
-    cardsContainer.style.gridTemplateColumns = 'repeat(auto-fill, minmax(320px, 1fr))';
-    cardsContainer.style.gap = '1.5rem';
-    
-    filteredData.forEach(item => {
-      const card = createCard(item); // Función auxiliar para crear tarjeta
-      cardsContainer.appendChild(card);
-    });
-    
-    section.appendChild(cardsContainer);
-    grid.appendChild(section);
-  } else {
-    // Sin agrupar: tarjetas normales
-    filteredData.forEach(item => {
-      const card = createCard(item);
-      grid.appendChild(card);
-    });
-  }
-}
-
-// Función auxiliar para crear una tarjeta (ajusta campos según tus columnas)
-function createCard(item) {
-  const card = document.createElement('div');
-  card.className = 'card';
-  
-  const nombre = item['Nombre'] || item['Nombre del Negocio'] || 'Sin nombre';
-  const zona = item['Zona'] || '-';
-  const municipio = item['Municipio'] || '-';
-  const descBreve = (item['Dirección'] || item['Actividad'] || '').substring(0, 80) + '...';
-  
-  card.innerHTML = `
-    <div class="card-header">${nombre}</div>
-    <div class="card-body">
-      <p><strong>Zona:</strong> ${zona}</p>
-      <p><strong>Municipio:</strong> ${municipio}</p>
-      ${descBreve ? `<p style="margin-top:10px; font-size:0.95em; color:#555;">${descBreve}</p>` : ''}
-    </div>
-  `;
-  
-  card.onclick = () => showModal(item);
-  return card;
-}
-  
-  const grid = document.getElementById('cardsGrid');
-  grid.innerHTML = filteredData.length === 0 ? '<p class="no-results">No se encontraron resultados</p>' : '';
-  
-  if (currentGroupCategory && currentGroupValue) {
-    // Modo agrupado: una sección con título
-    const sectionTitle = document.createElement('h2');
-    sectionTitle.textContent = `${currentGroupCategory}: ${currentGroupValue}`;
-    sectionTitle.style.textAlign = 'center';
-    sectionTitle.style.color = '#2e7d32';
-    sectionTitle.style.margin = '2rem 0 1rem';
-    grid.appendChild(sectionTitle);
-  }
-  
-  // Renderizar tarjetas
-  filteredData.forEach(item => {
-    const card = document.createElement('div');
-    card.className = 'card';
-    
-    const nombre = item['Nombre'] || item['Nombre del Negocio'] || item['Nombre Empresa'] || 'Sin nombre';
-    const zona = item['Zona'] || '-';
-    const municipio = item['Municipio'] || '-';
-    const descBreve = (item['Dirección'] || item['Actividad'] || '').substring(0, 100) + '...';
-    
-    card.innerHTML = `
-      <div class="card-header">${nombre}</div>
-      <div class="card-body">
-        <p><strong>Zona:</strong> ${zona}</p>
-        <p><strong>Municipio:</strong> ${municipio}</p>
-        ${descBreve ? `<p style="margin-top:10px; font-size:0.95em; color:#555;">${descBreve}</p>` : ''}
-      </div>
-    `;
-    
-    card.onclick = () => showModal(item);
-    grid.appendChild(card);
-  });
-}
-	  
-
-	  
   </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
