@@ -204,31 +204,76 @@
     }
 
     // Modal con links
-    function showModal(item) {
-      document.getElementById('modalNombre').textContent = item['Nombre'] || item['Nombre del Negocio'] || 'Detalle del Negocio';
-      let html = '';
-      for (let key in item) {
-        if (item[key]) {
-          let value = item[key];
-          if (key.toLowerCase().includes('web') || key.toLowerCase().includes('url') || key.toLowerCase().includes('face') || key.toLowerCase().includes('insta') || key.toLowerCase().includes('tik')) {
-            value = `<a href="${value.startsWith('http') ? value : 'https://' + value}" target="_blank" style="color:#2e7d32;">${value}</a>`;
-          } else if (key.toLowerCase().includes('email')) {
-            value = `<a href="mailto:${value}" style="color:#2e7d32;">${value}</a>`;
-          } else if (key.toLowerCase().includes('whats') || key.toLowerCase().includes('tel')) {
-            value = `<a href="https://wa.me/${value.replace(/\D/g,'')}" target="_blank" style="color:#25D366;">${value}</a>`;
-          } else if (key.toLowerCase().includes('gps') || key.toLowerCase().includes('pos')) {
-            const coords = value.match(/POINT \(([^ ]+) ([^ ]+)\)/);
-            if (coords) {
-              const lat = coords[2], lng = coords[1];
-              value = `<a href="https://www.google.com/maps/search/?api=1&query=${lat},${lng}" target="_blank" style="color:#4285F4;">Ver en Maps (${lat}, ${lng})</a>`;
-            }
-          }
-          html += `<p><strong>${key}:</strong> ${value}</p>`;
-        }
-      }
-      document.getElementById('modalDetalles').innerHTML = html || '<p>No hay detalles adicionales.</p>';
-      document.getElementById('modal').style.display = 'flex';
+   function showModal(item) {
+  document.getElementById('modalNombre').textContent = item['Nombre'] || item['Nombre del Negocio'] || 'Detalle del Negocio';
+  
+  let logoUrl = item['Logo'] || '';
+  if (logoUrl && !logoUrl.startsWith('http')) {
+    logoUrl = 'https://raw.githubusercontent.com/cardiqueverde-gif/cardiqueverde/main/logos/' + logoUrl.split('/').pop();
+  }
+  
+  let html = '';
+  
+  // Logo grande arriba
+  if (logoUrl) {
+    html += `
+      <div style="text-align: center; margin-bottom: 1.5rem;">
+        <img src="${logoUrl}" alt="${item['Nombre'] || 'Logo'}" style="max-height: 150px; max-width: 100%; object-fit: contain; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+      </div>
+    `;
+  } else {
+    html += '<p style="text-align:center; color:#777; margin-bottom:1.5rem;">Sin logo disponible</p>';
+  }
+  
+  // Botón de mapa si hay Pos o Gps
+  let lat = null;
+  let lng = null;
+  
+  // Caso 1: Pos como latitud simple
+  if (item['Pos'] && !isNaN(parseFloat(item['Pos']))) {
+    lat = parseFloat(item['Pos']);
+    lng = parseFloat(item['Longitud'] || item['Pos']); // Si hay Longitud separada, úsala; sino asume Pos es lat
+  }
+  
+  // Caso 2: Gps en formato POINT (lng lat)
+  if (item['Gps']) {
+    const match = item['Gps'].match(/POINT \(([^ ]+) ([^ ]+)\)/);
+    if (match) {
+      lng = parseFloat(match[1]); // longitud primero en POINT
+      lat = parseFloat(match[2]);
     }
+  }
+  
+  // Agregar botón solo si hay coordenadas válidas
+  if (lat !== null && lng !== null && !isNaN(lat) && !isNaN(lng)) {
+    const mapUrl = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+    html += `
+      <p style="text-align: center; margin: 1.5rem 0;">
+        <a href="${mapUrl}" target="_blank" style="display: inline-block; padding: 12px 24px; background: #4285F4; color: white; font-weight: bold; border-radius: 50px; text-decoration: none; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">
+          Ver Ubicación en Google Maps
+        </a>
+      </p>
+    `;
+  }
+  
+  // Resto de campos con links
+  for (let key in item) {
+    if (item[key] && key !== 'Logo' && key !== 'Pos' && key !== 'Gps') { // Evitamos duplicar Pos/Gps
+      let value = item[key];
+      if (key.toLowerCase().includes('web') || key.toLowerCase().includes('url') || key.toLowerCase().includes('face') || key.toLowerCase().includes('insta') || key.toLowerCase().includes('tik')) {
+        value = `<a href="${value.startsWith('http') ? value : 'https://' + value}" target="_blank" style="color:#2e7d32;">${value}</a>`;
+      } else if (key.toLowerCase().includes('email')) {
+        value = `<a href="mailto:${value}" style="color:#2e7d32;">${value}</a>`;
+      } else if (key.toLowerCase().includes('whats') || key.toLowerCase().includes('tel')) {
+        value = `<a href="https://wa.me/${value.replace(/\D/g,'')}" target="_blank" style="color:#25D366;">${value}</a>`;
+      }
+      html += `<p><strong>${key}:</strong> ${value}</p>`;
+    }
+  }
+  
+  document.getElementById('modalDetalles').innerHTML = html || '<p>No hay detalles adicionales.</p>';
+  document.getElementById('modal').style.display = 'flex';
+}
 
     function closeModal() {
       document.getElementById('modal').style.display = 'none';
@@ -247,3 +292,4 @@
   </script>
 </body>
 </html>
+
