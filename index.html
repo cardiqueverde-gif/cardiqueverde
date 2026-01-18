@@ -233,54 +233,148 @@ function showModal(item) {
     });
 
 
+ let allData = [];
 let currentGroupCategory = '';
 let currentGroupValue = '';
 
-// Función para obtener valores únicos de una columna
+// Esperar a que los datos carguen (ya lo tienes en Papa.parse complete)
+Papa.parse(PROXY_URL + SHEET_CSV_URL, {
+  download: true,
+  header: true,
+  skipEmptyLines: true,
+  complete: function(results) {
+    allData = results.data.filter(row => Object.values(row).some(val => val !== '' && val !== null));
+    console.log('Datos cargados:', allData.length, 'filas'); // Para depurar en consola
+    renderCards(allData);
+    // Habilitar combos una vez cargados
+    document.getElementById('groupCategory').disabled = false;
+  },
+  error: function(error) {
+    console.error('Error al cargar CSV:', error);
+    document.getElementById('cardsGrid').innerHTML = '<p class="no-results">Error al cargar datos. Revisa consola (F12) o activa proxy CORS.</p>';
+  }
+});
+
+// Obtener valores únicos (ignora case y valores vacíos)
 function getUniqueValues(data, key) {
-  const values = [...new Set(data.map(item => item[key]).filter(v => v))];
-  return values.sort();
+  if (!key) return [];
+  const lowerKey = key.trim().toLowerCase();
+  const values = data
+    .map(item => {
+      // Busca columna ignorando mayúsculas/minúsculas
+      const actualKey = Object.keys(item).find(k => k.trim().toLowerCase() === lowerKey);
+      return actualKey ? item[actualKey] : null;
+    })
+    .filter(v => v && v.trim() !== '');
+  return [...new Set(values)].sort();
 }
 
-// Actualizar segundo combo cuando cambie la categoría
+// Cambio de categoría principal
 document.getElementById('groupCategory').addEventListener('change', function() {
-  currentGroupCategory = this.value;
+  currentGroupCategory = this.value.trim();
   const valueSelect = document.getElementById('groupValue');
   const container = document.getElementById('valueFilterContainer');
   
   valueSelect.innerHTML = '<option value="">Todos</option>';
   
-  if (currentGroupCategory) {
+  if (currentGroupCategory && allData.length > 0) {
     const uniqueValues = getUniqueValues(allData, currentGroupCategory);
-    uniqueValues.forEach(val => {
-      const option = document.createElement('option');
-      option.value = val;
-      option.textContent = val;
-      valueSelect.appendChild(option);
-    });
-    container.style.display = 'block';
+    console.log(`Valores únicos para ${currentGroupCategory}:`, uniqueValues); // Depuración
+    
+    if (uniqueValues.length === 0) {
+      valueSelect.innerHTML += '<option disabled>Sin valores disponibles</option>';
+    } else {
+      uniqueValues.forEach(val => {
+        const option = document.createElement('option');
+        option.value = val;
+        option.textContent = val;
+        valueSelect.appendChild(option);
+      });
+    }
+    container.style.display = 'inline-block';
   } else {
     container.style.display = 'none';
     currentGroupValue = '';
   }
   
-  renderCards(allData); // Recargar vista
+  renderCards(allData);
 });
 
-// Aplicar filtro cuando cambie el valor
+// Cambio de valor específico
 document.getElementById('groupValue').addEventListener('change', function() {
   currentGroupValue = this.value;
   renderCards(allData);
 });
 
-// Nueva función renderCards con agrupamiento visual
+// renderCards ajustada (agrupamiento visual solo si hay valor seleccionado)
 function renderCards(data) {
   let filteredData = data;
   
-  // Aplicar filtro por valor seleccionado
+  // Filtro por valor
   if (currentGroupCategory && currentGroupValue) {
-    filteredData = data.filter(item => item[currentGroupCategory] === currentGroupValue);
+    const lowerCategory = currentGroupCategory.toLowerCase();
+    filteredData = data.filter(item => {
+      const actualKey = Object.keys(item).find(k => k.trim().toLowerCase() === lowerCategory);
+      return actualKey && item[actualKey] === currentGroupValue;
+    });
   }
+  
+  const grid = document.getElementById('cardsGrid');
+  grid.innerHTML = filteredData.length === 0 ? '<p class="no-results">No se encontraron resultados</p>' : '';
+  
+  // Agrupamiento visual (solo si hay valor específico)
+  if (currentGroupCategory && currentGroupValue) {
+    const section = document.createElement('div');
+    section.style.margin = '2rem 0';
+    const title = document.createElement('h2');
+    title.textContent = `${currentGroupCategory}: ${currentGroupValue} (${filteredData.length} negocios)`;
+    title.style.color = '#2e7d32';
+    title.style.textAlign = 'center';
+    section.appendChild(title);
+    
+    const cardsContainer = document.createElement('div');
+    cardsContainer.style.display = 'grid';
+    cardsContainer.style.gridTemplateColumns = 'repeat(auto-fill, minmax(320px, 1fr))';
+    cardsContainer.style.gap = '1.5rem';
+    
+    filteredData.forEach(item => {
+      const card = createCard(item); // Función auxiliar para crear tarjeta
+      cardsContainer.appendChild(card);
+    });
+    
+    section.appendChild(cardsContainer);
+    grid.appendChild(section);
+  } else {
+    // Sin agrupar: tarjetas normales
+    filteredData.forEach(item => {
+      const card = createCard(item);
+      grid.appendChild(card);
+    });
+  }
+}
+
+// Función auxiliar para crear una tarjeta (ajusta campos según tus columnas)
+function createCard(item) {
+  const card = document.createElement('div');
+  card.className = 'card';
+  
+  const nombre = item['Nombre'] || item['Nombre del Negocio'] || 'Sin nombre';
+  const zona = item['Zona'] || '-';
+  const municipio = item['Municipio'] || '-';
+  const descBreve = (item['Dirección'] || item['Actividad'] || '').substring(0, 80) + '...';
+  
+  card.innerHTML = `
+    <div class="card-header">${nombre}</div>
+    <div class="card-body">
+      <p><strong>Zona:</strong> ${zona}</p>
+      <p><strong>Municipio:</strong> ${municipio}</p>
+      ${descBreve ? `<p style="margin-top:10px; font-size:0.95em; color:#555;">${descBreve}</p>` : ''}
+    </div>
+  `;
+  
+  card.onclick = () => showModal(item);
+  return card;
+}
   
   const grid = document.getElementById('cardsGrid');
   grid.innerHTML = filteredData.length === 0 ? '<p class="no-results">No se encontraron resultados</p>' : '';
@@ -324,6 +418,7 @@ function renderCards(data) {
   </script>
 </body>
 </html>
+
 
 
 
